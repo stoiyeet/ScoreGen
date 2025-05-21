@@ -17,7 +17,6 @@ ScoreGen is an innovative desktop application that converts live monophonic audi
 
 The application handles the complete pipeline from audio capture through signal processing to final sheet music rendering, making music transcription accessible to musicians of all levels.
 
-**Developer Names**: Emily Perica, Ian Algenio, Jackson Lippert, Mark Kogan  
 **Date of project start**: Sept 16/2024 
 
 
