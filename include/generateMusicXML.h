@@ -6,6 +6,7 @@
 #include <string>
 #include "libmusicxml.h"
 #include "common.h"
+#include <map>
 
 using namespace std;
 using namespace MusicXML2;

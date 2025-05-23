@@ -1,13 +1,12 @@
 #include "dsp.h"
-
-#define SILENCE_LENGTH 512
 #define PPQ 480 // Pulses per quarter note, default for MusicXML
 
-std::vector<double> prependSilence(const std::vector<float>& buf, size_t silenceLength) {
-    std::vector<double> paddedBuffer(silenceLength, 0.0f); // Add silence
-    paddedBuffer.insert(paddedBuffer.end(), buf.begin(), buf.end());
-    return paddedBuffer;
-}
+const int MIN_BPM = 60;
+const int MAX_BPM = 200;
+const double BPM_ONSET_THRESHOLD_FACTOR = 0.2;
+const int BPM_FRAME_SIZE = 1024;
+const int BPM_HOP_SIZE = 512;
+
 
 XMLNote convertToXMLNote(const Note& note, int bpm) {
     XMLNote xmlNote;
@@ -18,7 +17,21 @@ XMLNote convertToXMLNote(const Note& note, int bpm) {
 
     // Convert note duration in s to duration in divisions
     float noteDurationInSeconds = note.endTime - note.startTime;
-    xmlNote.duration = static_cast<int>(std::round((noteDurationInSeconds * (bpm / 60.0) * PPQ) / PPQ) * PPQ);
+    double durationInBeats = noteDurationInSeconds * (bpm / 60.0);
+
+    std::vector<double> allowedBeats = {0.25, 0.5, 1.0, 1.5, 2.0, 4.0};
+
+    // Find the closest allowed beat duration
+    double closest = allowedBeats[0];
+    double minDiff = std::abs(durationInBeats - closest);
+    for (double val : allowedBeats) {
+        double diff = std::abs(durationInBeats - val);
+        if (diff < minDiff) {
+            minDiff = diff;
+            closest = val;
+        }
+    }
+    xmlNote.duration = static_cast<int>(closest * PPQ);
     xmlNote.type = note.type;
 
     // Extract note name and octave
@@ -128,8 +141,7 @@ DSPResult dsp(const char* infilename) {
         buf = move(tempBuffer);
     }
 
-    const std::vector<double> paddedBuf = prependSilence(buf, SILENCE_LENGTH);
-    int bpm = getBufferBPM(paddedBuf, sfinfo.samplerate);
+    int bpm = getBufferBPM(buf, sfinfo.samplerate);
     std::cout << "Detected BPM: " << bpm << std::endl;
     std::vector<Note> notes = extract_note_durations(infilename, bpm);
 

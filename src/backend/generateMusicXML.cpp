@@ -13,17 +13,25 @@ using namespace MusicXML2;
 //    240   -> "eighth"
 // (Extend this mapping as needed.)
 std::string MusicXMLGenerator::getNoteTypeFromDuration(int duration, int divisions) {
-    if (duration == divisions)
-        return "quarter";
-    else if (duration == 2 * divisions)
-        return "half";
-    else if (duration == 4 * divisions)
-        return "whole";
-    else if (duration == divisions / 2)
-        return "eighth";
-    else if (duration == (3 * divisions) / 2)
-        return "dotted-quarter";
-    return "quarter";
+    float numBeats = duration / static_cast<float>(divisions);
+    std::map<std::string, float> note_durations = {
+        {"sixteenth", 0.25},
+        {"eighth", 0.5},
+        {"quarter", 1.0},
+        {"dotted quarter", 1.5},
+        {"half", 2.0},
+        {"dotted half", 3.0},
+        {"whole", 4.0}
+    };
+
+    auto closest = std::min_element(
+        note_durations.begin(),
+        note_durations.end(),
+        [numBeats](const auto& a, const auto& b) {
+            return abs(a.second - numBeats) < abs(b.second - numBeats);
+        }
+    );
+    return closest->first;
 }
 
 //------------------------------------------------------------------------------
